@@ -14,8 +14,9 @@ public extension View {
     ///   - toast: A binding to the toast to display.
     ///   - edge: The edge of the screen where the toast appears.
     ///   - offset: The offset distance from the edge.
-    ///   - dismissDuration: The duration of the dismiss animation.
+    ///   - stayDuration: The duration the toast stays visible on screen before auto-dismissal.
     ///   - autoDismissable: Whether the toast should automatically dismiss.
+    ///   - isLast: A closure returning true if this is the last toast.
     ///   - onDismiss: A closure to call when the toast is dismissed.
     ///   - trailingView: A closure that returns a trailing view to be displayed in the toast.
     func toast<TrailingView: View>(
@@ -24,6 +25,7 @@ public extension View {
         offset: CGFloat = 0,
         stayDuration: Double = 2.6,
         autoDismissable: Bool = false,
+        isLast: @escaping () -> Bool = { true },
         onDismiss: @escaping () -> Void = {},
         @ViewBuilder trailingView: @escaping () -> TrailingView = { EmptyView() }
     ) -> some View {
@@ -34,6 +36,7 @@ public extension View {
                 offset: offset,
                 stayDuration: stayDuration,
                 isAutoDismissed: autoDismissable,
+                isLast: isLast,
                 onDismiss: onDismiss,
                 trailingView: trailingView()
             )
@@ -52,6 +55,7 @@ public extension View {
     ///   - stayDuration: The duration the toast stays visible on screen before auto-dismissal.
     ///   - isAutoDismissed: Pass `true` to let the toast dismiss itself after a
     ///     delay, or `false` to keep it onscreen until the user swipes it away.
+    ///   - isLast: A closure returning true if this is the last toast.
     ///   - onDismiss: A closure that’s called after the toast is dismissed
     ///     (either automatically or by the user).
     ///   - trailingView: An optional trailing view—such as a button or progress
@@ -62,6 +66,7 @@ public extension View {
         offset: CGFloat = 0,
         stayDuration: Double = 2.6,
         isAutoDismissed: Bool = true,
+        isLast: @escaping () -> Bool = { true },
         onDismiss: @escaping () -> Void = {},
         @ViewBuilder trailingView: () -> T = { EmptyView() }
     ) -> some View {
@@ -72,6 +77,7 @@ public extension View {
                 offset: offset,
                 stayDuration: stayDuration,
                 isAutoDismissed: isAutoDismissed,
+                isLast: isLast,
                 onDismiss: onDismiss,
                 trailingView: trailingView()
             )
@@ -89,6 +95,7 @@ public extension View {
     ///   - stayDuration: The duration the toast stays visible on screen before auto-dismissal.
     ///   - isAutoDismissed: Pass `true` to let the toast dismiss itself after a
     ///     delay, or `false` to keep it onscreen until the user swipes it away.
+    ///   - isLast: A closure returning true if this is the last toast.
     ///   - onDismiss: A closure that’s called after the toast is dismissed
     ///     (either automatically or by the user).
     ///   - trailingView: An optional trailing view—such as a button or progress
@@ -100,6 +107,7 @@ public extension View {
         offset: CGFloat = 0,
         stayDuration: Double = 2.6,
         isAutoDismissed: Bool = true,
+        isLast: @escaping () -> Bool = { true },
         onDismiss: @escaping () -> Void = {},
         @ViewBuilder trailingView: () -> T = { EmptyView() }
     ) -> some View {
@@ -110,6 +118,7 @@ public extension View {
                 offset: offset,
                 stayDuration: stayDuration,
                 isAutoDismissed: isAutoDismissed,
+                isLast: isLast,
                 onDismiss: onDismiss,
                 trailingView: trailingView(),
                 style: AnyToastStyle(style)
@@ -118,3 +127,73 @@ public extension View {
     }
 }
 
+public extension View {
+    /// 使用 `ToastManager` 队列展示 Toast 提示。
+    ///
+    /// - Parameters:
+    ///   - manager: 管理 Toast 队列的 `ToastManager`。
+    ///   - edge: Toast 出现的屏幕边缘 (`.top` 或 `.bottom`)。
+    ///   - offset: 呈现在屏幕时的物理偏移量。
+    ///   - stayDuration: 自动消失前在屏幕的停留时长。
+    ///   - trailingView: 右侧可附加的尾部视图。
+    @MainActor
+    func toast<T: View>(
+        manager: ToastManager,
+        edge: VerticalEdge = .top,
+        offset: CGFloat = 0,
+        stayDuration: Double = 2.6,
+        @ViewBuilder trailingView: @escaping () -> T = { EmptyView() }
+    ) -> some View {
+        self.toast(
+            Binding(
+                get: { manager.currentToast },
+                set: { manager.currentToast = $0 }
+            ),
+            edge: edge,
+            offset: offset,
+            stayDuration: stayDuration,
+            isAutoDismissed: true,
+            isLast: { manager.isQueueEmpty },
+            onDismiss: {
+                manager.handleDismiss()
+            },
+            trailingView: trailingView
+        )
+    }
+
+    /// 使用自定义样式的 `ToastManager` 队列展示 Toast 提示。
+    ///
+    /// - Parameters:
+    ///   - manager: 管理 Toast 队列的 `ToastManager`。
+    ///   - style: 应用于当前 Toast 的自定义样式。
+    ///   - edge: Toast 出现的屏幕边缘 (`.top` 或 `.bottom`)。
+    ///   - offset: 呈现在屏幕时的物理偏移量。
+    ///   - stayDuration: 自动消失前在屏幕的停留时长。
+    ///   - trailingView: 右侧可附加的尾部视图。
+    @MainActor
+    func toast<T: View, S: ToastStyle>(
+        manager: ToastManager,
+        style: S,
+        edge: VerticalEdge = .top,
+        offset: CGFloat = 0,
+        stayDuration: Double = 2.6,
+        @ViewBuilder trailingView: @escaping () -> T = { EmptyView() }
+    ) -> some View {
+        self.toast(
+            Binding(
+                get: { manager.currentToast },
+                set: { manager.currentToast = $0 }
+            ),
+            style: style,
+            edge: edge,
+            offset: offset,
+            stayDuration: stayDuration,
+            isAutoDismissed: true,
+            isLast: { manager.isQueueEmpty },
+            onDismiss: {
+                manager.handleDismiss()
+            },
+            trailingView: trailingView
+        )
+    }
+}

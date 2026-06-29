@@ -42,6 +42,7 @@ struct ToastModifier<TrailingView: View>: ViewModifier {
     private let offset: CGFloat
     private let stayDuration: Double
     private let isAutoDismissed: Bool
+    private let isLast: () -> Bool
     private let onDismiss: () -> Void
     private let trailingView: TrailingView
     @Binding private var toast: Toast?
@@ -63,6 +64,7 @@ struct ToastModifier<TrailingView: View>: ViewModifier {
         offset: CGFloat = 0,
         stayDuration: Double = 2.6,
         isAutoDismissed: Bool,
+        isLast: @escaping () -> Bool = { true },
         onDismiss: @escaping () -> Void,
         trailingView: TrailingView,
         style: AnyToastStyle? = nil
@@ -72,6 +74,7 @@ struct ToastModifier<TrailingView: View>: ViewModifier {
         self.offset = offset
         self.stayDuration = stayDuration
         self.isAutoDismissed = isAutoDismissed
+        self.isLast = isLast
         self.trailingView = trailingView
         self.onDismiss = onDismiss
         self.explicitStyle = style
@@ -96,7 +99,12 @@ struct ToastModifier<TrailingView: View>: ViewModifier {
         withAnimation(.easeOut(duration: 0.8)) {
             isPresented = false
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+        if isLast() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                toast = nil
+                onDismiss()
+            }
+        } else {
             toast = nil
             onDismiss()
         }
