@@ -40,7 +40,7 @@ public extension View {
 struct ToastModifier<TrailingView: View>: ViewModifier {
     private let edge: VerticalEdge
     private let offset: CGFloat
-    private let dismissDuration: Double
+    private let stayDuration: Double
     private let isAutoDismissed: Bool
     private let onDismiss: () -> Void
     private let trailingView: TrailingView
@@ -50,14 +50,18 @@ struct ToastModifier<TrailingView: View>: ViewModifier {
     @State private var isPresented: Bool = false
 
     private var yOffset: CGFloat {
-        isPresented ? .zero : offset
+        if isPresented {
+            return edge == .top ? offset : -offset
+        } else {
+            return edge == .top ? -300 : 300
+        }
     }
 
     init(
         toast: Binding<Toast?>,
         edge: VerticalEdge,
-        offset: CGFloat = 200,
-        dismissDuration: Double = 0.8,
+        offset: CGFloat = 0,
+        stayDuration: Double = 2.6,
         isAutoDismissed: Bool,
         onDismiss: @escaping () -> Void,
         trailingView: TrailingView,
@@ -65,8 +69,8 @@ struct ToastModifier<TrailingView: View>: ViewModifier {
     ) {
         self._toast = toast
         self.edge = edge
-        self.offset = edge == .top ? -offset : offset
-        self.dismissDuration = dismissDuration
+        self.offset = offset
+        self.stayDuration = stayDuration
         self.isAutoDismissed = isAutoDismissed
         self.trailingView = trailingView
         self.onDismiss = onDismiss
@@ -89,17 +93,17 @@ struct ToastModifier<TrailingView: View>: ViewModifier {
     }
 
     private func dismissToastAnimation() {
-        withAnimation(.easeOut(duration: dismissDuration)) {
+        withAnimation(.easeOut(duration: 0.8)) {
             isPresented = false
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + dismissDuration) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
             toast = nil
             onDismiss()
         }
     }
 
     private func autoDismissToastAnimation() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.6) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + stayDuration) {
             dismissToastAnimation()
         }
     }

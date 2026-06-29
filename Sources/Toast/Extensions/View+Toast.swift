@@ -21,8 +21,8 @@ public extension View {
     func toast<TrailingView: View>(
         _ toast: Binding<Toast?>,
         edge: VerticalEdge = .top,
-        offset: CGFloat = 200,
-        dismissDuration: Double = 0.8,
+        offset: CGFloat = 0,
+        stayDuration: Double = 2.6,
         autoDismissable: Bool = false,
         onDismiss: @escaping () -> Void = {},
         @ViewBuilder trailingView: @escaping () -> TrailingView = { EmptyView() }
@@ -32,7 +32,7 @@ public extension View {
                 toast: toast,
                 edge: edge,
                 offset: offset,
-                dismissDuration: dismissDuration,
+                stayDuration: stayDuration,
                 isAutoDismissed: autoDismissable,
                 onDismiss: onDismiss,
                 trailingView: trailingView()
@@ -49,7 +49,7 @@ public extension View {
     ///   - toast: A binding to the `Toast` to display.
     ///   - edge: The screen edge where the toast appears (`.top` or `.bottom`).
     ///   - offset: The offset distance from the edge.
-    ///   - dismissDuration: The duration of the dismiss animation.
+    ///   - stayDuration: The duration the toast stays visible on screen before auto-dismissal.
     ///   - isAutoDismissed: Pass `true` to let the toast dismiss itself after a
     ///     delay, or `false` to keep it onscreen until the user swipes it away.
     ///   - onDismiss: A closure that’s called after the toast is dismissed
@@ -59,8 +59,8 @@ public extension View {
     func toast<T: View>(
         _ toast: Binding<Toast?>,
         edge: VerticalEdge = .top,
-        offset: CGFloat = 200,
-        dismissDuration: Double = 0.8,
+        offset: CGFloat = 0,
+        stayDuration: Double = 2.6,
         isAutoDismissed: Bool = true,
         onDismiss: @escaping () -> Void = {},
         @ViewBuilder trailingView: () -> T = { EmptyView() }
@@ -70,7 +70,7 @@ public extension View {
                 toast: toast,
                 edge: edge,
                 offset: offset,
-                dismissDuration: dismissDuration,
+                stayDuration: stayDuration,
                 isAutoDismissed: isAutoDismissed,
                 onDismiss: onDismiss,
                 trailingView: trailingView()
@@ -86,7 +86,7 @@ public extension View {
     ///   - style: The `ToastStyle` to apply to *this* toast only.
     ///   - edge: The screen edge where the toast appears (`.top` or `.bottom`).
     ///   - offset: The offset distance from the edge.
-    ///   - dismissDuration: The duration of the dismiss animation.
+    ///   - stayDuration: The duration the toast stays visible on screen before auto-dismissal.
     ///   - isAutoDismissed: Pass `true` to let the toast dismiss itself after a
     ///     delay, or `false` to keep it onscreen until the user swipes it away.
     ///   - onDismiss: A closure that’s called after the toast is dismissed
@@ -97,8 +97,8 @@ public extension View {
         _ toast: Binding<Toast?>,
         style: S,
         edge: VerticalEdge = .top,
-        offset: CGFloat = 200,
-        dismissDuration: Double = 0.8,
+        offset: CGFloat = 0,
+        stayDuration: Double = 2.6,
         isAutoDismissed: Bool = true,
         onDismiss: @escaping () -> Void = {},
         @ViewBuilder trailingView: () -> T = { EmptyView() }
@@ -108,7 +108,7 @@ public extension View {
                 toast: toast,
                 edge: edge,
                 offset: offset,
-                dismissDuration: dismissDuration,
+                stayDuration: stayDuration,
                 isAutoDismissed: isAutoDismissed,
                 onDismiss: onDismiss,
                 trailingView: trailingView(),
