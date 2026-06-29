@@ -40,6 +40,7 @@ public extension View {
 struct ToastModifier<TrailingView: View>: ViewModifier {
     private let edge: VerticalEdge
     private let offset: CGFloat
+    private let dismissDuration: Double
     private let isAutoDismissed: Bool
     private let onDismiss: () -> Void
     private let trailingView: TrailingView
@@ -55,6 +56,8 @@ struct ToastModifier<TrailingView: View>: ViewModifier {
     init(
         toast: Binding<Toast?>,
         edge: VerticalEdge,
+        offset: CGFloat = 200,
+        dismissDuration: Double = 0.8,
         isAutoDismissed: Bool,
         onDismiss: @escaping () -> Void,
         trailingView: TrailingView,
@@ -62,10 +65,11 @@ struct ToastModifier<TrailingView: View>: ViewModifier {
     ) {
         self._toast = toast
         self.edge = edge
+        self.offset = edge == .top ? -offset : offset
+        self.dismissDuration = dismissDuration
         self.isAutoDismissed = isAutoDismissed
         self.trailingView = trailingView
         self.onDismiss = onDismiss
-        self.offset = edge == .top ? -200 : 200
         self.explicitStyle = style
     }
 
@@ -85,10 +89,10 @@ struct ToastModifier<TrailingView: View>: ViewModifier {
     }
 
     private func dismissToastAnimation() {
-        withAnimation(.easeOut(duration: 0.8)) {
+        withAnimation(.easeOut(duration: dismissDuration)) {
             isPresented = false
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + dismissDuration) {
             toast = nil
             onDismiss()
         }
